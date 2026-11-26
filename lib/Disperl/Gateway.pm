@@ -808,6 +808,9 @@ sub _run_once {
         }
 
         $wait = 0.05 if $wait < 0.05;
+        # stop() / Ctrl+C の応答性を保つため、受信待ちに 1 秒の上限を付ける
+        #（Windows はシグナルで select / sysread を中断できないため）
+        $wait = 1 if $wait > 1;
 
         my $frame = $ws->recv_frame(timeout => $wait);
         next unless $frame;

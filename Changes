@@ -55,6 +55,8 @@
 
 - WebSocket のマスクキー / `Sec-WebSocket-Key` の乱数源を強化
   （`/dev/urandom` → `Crypt::URandom` → ハッシュ混合フォールバック）
+- Gateway の受信待ちに 1 秒の上限を追加（`stop` / Ctrl+C の応答性改善。
+  Windows はシグナルで select / sysread を中断できないため）
 - 受信メッセージの上限を追加（`max_message_size`、既定 32 MiB。`0` で無制限）
   と制御フレーム（125 バイト以下）の検証
 - URL に埋め込む ID / トークンの文字種を送信前に検証（数字・base64url のみ）
