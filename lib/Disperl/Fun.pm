@@ -18,9 +18,9 @@ our @EXPORT_OK = qw(omikuji eight_ball love);
 #   my $fortune2 = omikuji('2026-11-23');     # 同じ種なら同じ結果
 #   my $answer   = eight_ball();              # ランダムな返答
 #   my $answer2  = eight_ball('今日は勝てる?'); # 同じ質問なら同じ返答
-#   my $percent  = love('ちぇん', '藍様');      # 0〜100 の好感度（順序不変・決定的）
+#   my $percent  = love('Alice', 'Bob');      # 0〜100 の好感度（順序不変・決定的）
 #
-# love は旧 ちぇんbot（Python）の SHA256 圧縮アルゴリズムの移植です。
+# love は名前のペアから決定的に 0〜100 を算出します。
 # 同じ名前のペアなら常に同じ数字になるため、「毎回同じ結果が出る」ネタとして使えます。
 
 # おみくじ（重みは合計 100）
@@ -33,7 +33,7 @@ my @FORTUNES = (
     [ '大凶' => 5  ],
 );
 
-# 8ball の返答（旧 ちぇんbot から引き継いだ 20 種）
+# 8ball の返答（20 種）
 my @EIGHT_BALL = (
     "🟢間違いないよ!", "🟢そう決まっているね!", "🟢疑う余地がない!", "🟢絶対YES!!", "🟢頼っていい!",
     "🟢私の見るところではYES!", "🟢ほぼ間違いない!", "🟢見通しは良好ですね", "🟢YES!", "🟢YESの兆し!",
@@ -73,7 +73,7 @@ sub eight_ball {
 }
 
 # 好感度を 0〜100 で診断する。名前の順序は結果に影響しない。
-#   love('ちぇん', '藍様')
+#   love('Alice', 'Bob')
 sub love {
     my ($name1, $name2) = @_;
 
@@ -85,7 +85,7 @@ sub love {
     my $combined = "$sorted[0]&$sorted[1]";
     $combined = Encode::encode('UTF-8', $combined) if utf8::is_utf8($combined);
 
-    # 旧 ちぇんbot の圧縮アルゴリズム: SHA256 の各バイトを
+    # 圧縮アルゴリズム: SHA256 の各バイトを
     # 偶奇で異なる回転 XOR に通して 1 バイトに潰し、101 で割った余りを好感度にする。
     my $value = 0xAA;
     my $index = 0;

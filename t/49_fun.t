@@ -22,7 +22,7 @@ subtest 'omikuji' => sub {
 
     # 種を渡すと決定的（同じ種なら同じ運勢）
     is omikuji('2026-11-23'), omikuji('2026-11-23'), 'same seed, same fortune';
-    is omikuji('ちぇん'), omikuji('ちぇん'), 'japanese seed works too';
+    is omikuji('マタタビ'), omikuji('マタタビ'), 'japanese seed works too';
 
     # 多数の種で全ての運勢が出ることを確認
     my %seen;
@@ -37,7 +37,7 @@ subtest 'omikuji' => sub {
 subtest 'eight_ball' => sub {
     like eight_ball(), qr/^[🟢🟡🔴]/, 'random answer has a colored marker';
 
-    # 質問を渡すと決定的（同じ質問には同じ答え — ちぇんbot の ^yesno 方式のオマージュ）
+    # 質問を渡すと決定的（同じ質問には同じ答え）
     is eight_ball('今日は勝てる?'), eight_ball('今日は勝てる?'),
         'same question, same answer';
     is eight_ball('テスト'), eight_ball('テスト'), 'japanese question works too';
@@ -52,16 +52,16 @@ subtest 'eight_ball' => sub {
 };
 
 subtest 'love' => sub {
-    my $percent = love('ちぇん', '藍様');
+    my $percent = love('ネコ', 'イヌ');
     like $percent, qr/^\d+\z/, 'returns a number';
     cmp_ok $percent, '>=', 0, 'percent >= 0';
     cmp_ok $percent, '<=', 100, 'percent <= 100';
 
     # 決定的: 同じペアは常に同じ数字
-    is love('ちぇん', '藍様'), $percent, 'deterministic';
+    is love('ネコ', 'イヌ'), $percent, 'deterministic';
 
-    # 順序不変（ちぇんbot と同じ仕様）
-    is love('藍様', 'ちぇん'), $percent, 'order does not matter';
+    # 順序不変
+    is love('イヌ', 'ネコ'), $percent, 'order does not matter';
 
     # 日本語 / 英数字どちらでも動く
     like love('nuko', 'kamaboko'), qr/^\d+\z/, 'ascii names work';

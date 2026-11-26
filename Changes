@@ -39,7 +39,7 @@
   CLI（`test.pl event-webhooks`）
 - Webhook 実行の `with_components`（`components` 送信時に自動付与。`0` で無効化）
 - 小ネタモジュール（`Disperl::Fun`）: おみくじ・8ball・好感度診断
-  （love は旧 ちぇんbot の SHA256 圧縮アルゴリズムの移植。順序不変・決定的）と
+  （love は順序不変・決定的）と
   CLI（`test.pl fun-*`）とサンプル（`examples/fun_bot.pl`）
 - Gateway のプレゼンス文ローテーター（`rotate_presence` / `stop_rotate_presence`）
 - MIT License での公開（`LICENSE`）
