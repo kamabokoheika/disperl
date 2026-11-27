@@ -21,3 +21,6 @@ cover_db/
 
 # 配布物（git archive の出力先）
 dist/
+
+# Bot 実行時に生成される統計データ
+bot_stats.json
