@@ -27,13 +27,14 @@ use Disperl::Components qw(action_row button);
 use Disperl::Gateway;
 use Disperl::Router;
 
+
 load_dotenv("$FindBin::Bin/../.env");
 
 die "DISCORD_TOKEN がありません（.env を確認してください）\n"
     unless defined $ENV{DISCORD_TOKEN} && length $ENV{DISCORD_TOKEN};
 
-binmode STDOUT, ':encoding(cp932)';   # 日本語コンソール向け。絵文字を出すなら chcp 65001 + UTF-8
-binmode STDERR, ':encoding(cp932)';
+binmode STDOUT, ':encoding(UTF-8)';   # 日本語コンソール向け。絵文字を出すなら chcp 65001 + UTF-8
+binmode STDERR, ':encoding(UTF-8)';
 
 my $client = Disperl::Client->new(token => $ENV{DISCORD_TOKEN});
 my $STATS_FILE = "$FindBin::Bin/bot_stats.json";
@@ -132,10 +133,7 @@ $router->command(dice => sub {
     $ctx->reply('🎲 ' . join(', ', map { int(rand($sides)) + 1 } 1 .. $count));
 });
 
-$router->command(stat => sub {
-    my ($ctx) = @_;
-    $ctx->defer;    # 集計に時間がかかるかもしれないので先に受領だけ返す
-
+sub server_stat_text {
     my $today = today();
     my (%total, %by_user);
     for my $key (keys %stats) {
@@ -145,21 +143,35 @@ $router->command(stat => sub {
         $total{vc}  += $stats{$key}{vc}  // 0;
         $by_user{$u} += $stats{$key}{msg} // 0;
     }
-    my @top = (sort { $by_user{$b} <=> $by_user{$a} } keys %by_user)[0 .. 4];
+    # 5 位まで（登録が 5 未満のときは slice が undef を埋めるので除去する）
+    my @top = grep { defined } (sort { $by_user{$b} <=> $by_user{$a} } keys %by_user)[0 .. 4];
     my $ranking = join "\n", map {
         sprintf '%d. <@%s>: %d 件', $_ + 1, $top[$_], $by_user{ $top[$_] };
     } grep { $by_user{ $top[$_] } } 0 .. $#top;
 
-    $ctx->edit_original(sprintf
+    return sprintf
         "📊 今日のアクティビティ\nメッセージ: %d 件\nVC 滞在: %d 分\n%s",
         $total{msg}, int(($total{vc} // 0) / 60),
-        $ranking || '（データなし）');
+        $ranking || '（データなし）';
+}
+
+$router->command(stat => sub {
+    my ($ctx) = @_;
+    $ctx->defer;    # 集計に時間がかかるかもしれないので先に受領だけ返す
+    $ctx->edit_original(server_stat_text());
 });
 
 $router->command(pray => sub {
     my ($ctx) = @_;
     $ctx->reply('🙏 祈りを受け取ってください。良き一日を。');
 }, cooldown => 10);
+
+# !help の埋め込みに付けたボタン（custom_id 'help:stat'）のハンドラ。
+# ボタンを押すと INTERACTION_CREATE（type 3）が来るので、Router で受け取って返信する。
+$router->component('help:stat' => sub {
+    my ($ctx) = @_;
+    $ctx->reply(server_stat_text());
+});
 
 # ================================================================ prefix コマンド
 
@@ -205,6 +217,7 @@ my %voice_tracker;    # user_id => { guild_id, since }
 my $gw;
 $gw = Disperl::Gateway->new(
     token   => $ENV{DISCORD_TOKEN},
+    router  => $router,    # ★ これが無いとスラッシュコマンド / ボタンが反応しない
     intents => [qw(GUILDS GUILD_MEMBERS GUILD_MESSAGES GUILD_VOICE_STATES MESSAGE_CONTENT)],
     on_ready => sub {
         my $user = $gw->user;
