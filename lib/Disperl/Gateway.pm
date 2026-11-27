@@ -263,6 +263,9 @@ sub new {
         presence_interval => $args{presence_interval} // 4,
         # プレゼンス文ローテーター（rotate_presence で設定）
         presence_rotation => undef,
+        # タイマー（every / after で登録、run ループが駆動）
+        timers     => {},
+        timer_seq  => 0,
 
         seq             => undef,
         session_id      => undef,
@@ -478,6 +481,95 @@ sub stop_rotate_presence {
     return 0 unless $self->{presence_rotation};
     $self->{presence_rotation} = undef;
     return 1;
+}
+
+# 繰り返しタイマーを登録する。run ループに乗るので fork 不要の軽い定期処理向け。
+#   $gw->every(300 => \&flush_stats, name => 'stats');   # 5 分ごと（名前付き）
+#   $gw->every(30  => sub { ... });                      # 無名
+# 同じ name で登録し直すと上書きされる（on_ready での冪等セットアップ向け）。
+sub every {
+    my ($self, $seconds, $code, %opts) = @_;
+    return $self->_add_timer($seconds, $code, \%opts, 0);
+}
+
+# 1 回だけ発火するタイマーを登録する。
+#   $gw->after(10 => sub { ... });                       # 10 秒後
+sub after {
+    my ($self, $seconds, $code, %opts) = @_;
+    return $self->_add_timer($seconds, $code, \%opts, 1);
+}
+
+sub _add_timer {
+    my ($self, $seconds, $code, $opts, $once) = @_;
+
+    die "interval must be an integer of 1 second or more\n"
+        unless defined $seconds && !ref $seconds
+            && $seconds =~ /^\d+\z/ && $seconds >= 1;
+    die "code must be a code reference\n"
+        unless defined $code && ref $code eq 'CODE';
+
+    my $name = $opts->{name} // '#' . (++$self->{timer_seq});
+    die "timer name must be a non-empty string\n"
+        unless defined $name && length $name;
+
+    $self->{timers}{$name} = {
+        code     => $code,
+        interval => $seconds + 0,
+        next_at  => time + $seconds,   # 登録直後は発火しない（予測可能なため）
+        once     => $once,
+    };
+
+    return $self;
+}
+
+# 名前付きタイマーを解除する。解除できたら 1、見つからなければ 0。
+sub cancel_timer {
+    my ($self, $name) = @_;
+
+    die "timer name is required\n"
+        unless defined $name && length $name;
+
+    return delete $self->{timers}{$name} ? 1 : 0;
+}
+
+# 全てのタイマーを解除する。解除した個数を返す。
+sub cancel_all_timers {
+    my ($self) = @_;
+    my $count = scalar keys %{ $self->{timers} };
+    $self->{timers} = {};
+    return $count;
+}
+
+# 登録済みタイマーの一覧（デバッグ用）。name => { interval, next_at, once }
+sub timers {
+    my ($self) = @_;
+    return { map { $_ => { %{ $self->{timers}{$_} } } } keys %{ $self->{timers} } };
+}
+
+# タイマーの駆動部。run のループから毎回呼ばれる。
+sub _tick_timers {
+    my ($self) = @_;
+
+    return 0 unless $self->{ready} && $self->{ws};
+
+    my $now   = time;
+    my $fired = 0;
+    for my $name (sort keys %{ $self->{timers} }) {
+        my $timer = $self->{timers}{$name} or next;
+        next if $now < $timer->{next_at};
+
+        if ($timer->{once}) {
+            delete $self->{timers}{$name};
+        } else {
+            $timer->{next_at} = $now + $timer->{interval};
+        }
+
+        # エラーは _dispatch が隔離するので、死んでもループと他のタイマーは生きる
+        $self->_dispatch("timer '$name'", $timer->{code}, $self);
+        $fired++;
+    }
+
+    return $fired;
 }
 
 # rotate_presence の駆動部。run のループから一定間隔で呼ばれる。
@@ -785,6 +877,7 @@ sub _run_once {
         # 予約されたプレゼンス更新（レート制限の間隔待ち）を送る
         $self->_flush_presence;
         $self->_tick_presence_rotation;
+        $self->_tick_timers;
 
         if ($now >= $next_heartbeat) {
             if ($self->{awaiting_ack}) {

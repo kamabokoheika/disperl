@@ -82,6 +82,7 @@ Perl 製の Discord Bot 向けライブラリです。REST API と Gateway（Web
   （検証エンジンは `Crypt::PK::Ed25519`。HTTP サーバー部分は core のみ）
 - Webhook Events（`Disperl::EventWebhooks`）でインストール・Entitlement などの通知を HTTP で受信
 - 小ネタ（`Disperl::Fun`）: おみくじ・8ball・好感度診断。プレゼンス文のローテーターも同梱
+- Gateway タイマー（`every` / `after`）で定期処理を run ループに直結
 - コマンド定義ビルダー（`command` / `option`）と差分同期（`sync_commands`）
 - OAuth2 認可コードフロー（PKCE 対応。`Disperl::OAuth2`）でトークン取得・更新・失効
 
