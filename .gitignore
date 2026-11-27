@@ -24,3 +24,6 @@ dist/
 
 # Bot 実行時に生成される統計データ
 bot_stats.json
+
+# 本番用 Bot（GitHub 対象外）
+honban/

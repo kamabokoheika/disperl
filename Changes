@@ -44,7 +44,7 @@
 - Gateway のプレゼンス文ローテーター（`rotate_presence` / `stop_rotate_presence`）
 - Gateway のタイマー（`every` / `after` / `cancel_timer` / `cancel_all_timers`）—
   run ループに乗る定期処理。接続中のみ発火・エラーは隔離・名前付きで冪等登録可
-- 多機能 Bot のサンプル（`examples/full_bot.pl`）: スラッシュ + prefix コマンド・
+- 多機能 Bot のサンプル: スラッシュ + prefix コマンド・
   統計の JSON 永続化（タイマーでフラッシュ）・welcome / ブースト通知・VC 滞在追跡
 - MIT License での公開（`LICENSE`）
 - 動作確認 CLI（`test.pl`）と実行サンプル（`examples/` 16 本）:

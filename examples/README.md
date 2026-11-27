@@ -19,7 +19,6 @@ cp .env.example .env     # DISCORD_TOKEN / DISCORD_CHANNEL_ID を編集
 | [oauth2_login.pl](oauth2_login.pl) | OAuth2 認可コード + PKCE でトークンを取得 | `DISCORD_CLIENT_ID`（と Redirect 登録） |
 | [http_interactions.pl](http_interactions.pl) | Interactions Endpoint URL の HTTP サーバー（署名検証 / PING 応答） | `DISCORD_PUBLIC_KEY` と公開 URL（トークンがあれば `/hello` にも応答） |
 | [fun_bot.pl](fun_bot.pl) | 小ネタコマンドに応答する（おみくじ / 8ball / 好感度）+ プレゼンスローテーター | `MESSAGE_CONTENT`（Privileged Intent）を有効にする |
-| [full_bot.pl](full_bot.pl) | **多機能 Bot**（スラッシュ + prefix + 統計の JSON 永続化 + タイマー + welcome / ブースト通知 + VC 滞在追跡）| `MESSAGE_CONTENT` と `GUILD_MEMBERS`（Privileged Intent）を有効にする。統計は `bot_stats.json` に保存 |
 | [event_webhooks.pl](event_webhooks.pl) | Webhook Events を受信する HTTP サーバー | `DISCORD_PUBLIC_KEY` と公開 URL（イベント購読も必要） |
 | [interaction_endpoint.psgi](interaction_endpoint.psgi) | PSGI / Plack で Interactions Endpoint を受ける | `DISCORD_PUBLIC_KEY`。実行には Plack（`plackup`）が必要 |
 | [echo_bot.pl](echo_bot.pl) | `!ping` / `!echo` に応答する | `MESSAGE_CONTENT`（Privileged Intent）を有効にする |
@@ -44,7 +43,6 @@ perl examples/http_interactions.pl
 perl examples/event_webhooks.pl
 plackup examples/interaction_endpoint.psgi
 perl examples/fun_bot.pl
-perl examples/full_bot.pl
 perl examples/echo_bot.pl          # Ctrl+C まで動き続ける
 perl examples/slash_command.pl
 perl examples/buttons.pl
