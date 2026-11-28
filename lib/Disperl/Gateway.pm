@@ -845,9 +845,32 @@ sub _run_once {
 
     if ($frame->{opcode} == 8) {
         my $code = $frame->{code} // '?';
-        my $reason = $frame->{reason} // '';
-        die "Gateway closed during handshake (code $code"
-            . (length $reason ? " $reason" : '') . ")\n";
+        my $reason_str = $frame->{reason} // '';
+
+        # トークン不正・intents 不正などは再接続しても直らない
+        if (defined $code && ($code == 4004 || ($code >= 4010 && $code <= 4014))) {
+            $self->{fatal} = 1;
+            die "Fatal gateway close code $code\n";
+        }
+
+        # セッションが無効になった場合はセッションを忘れて Identify からやり直す
+        if (defined $code && ($code == 4006 || $code == 4007 || $code == 4009)) {
+            $self->_forget_session;
+            $self->{ws} = undef;
+            eval { $ws->close(1000) };
+            return 'resume';
+        }
+
+        # 4008 はレート制限。すぐには再接続せず、少し待つ
+        if (defined $code && $code == 4008) {
+            $self->{ws} = undef;
+            eval { $ws->close(1000) };
+            return 'rate_limited';
+        }
+
+        $self->{ws} = undef;
+        eval { $ws->close(1000) };
+        return 'resume';
     }
 
     my $hello = eval { $JSON->decode($frame->{payload}) };
@@ -1012,9 +1035,9 @@ sub _handle {
     return 'resume' if $op == 7;            # Reconnect
 
     if ($op == 9) {                         # Invalid Session
-        # d が false なら Resume できない。セッションを捨てて Identify からやり直す。
-        # d が true の場合は少し待てば Resume できるので、そのまま再開する。
-        $self->_forget_session unless $msg->{d};
+        # セッションが無効なので、セッション情報を破棄して Identify からやり直す。
+        # d が true/false に関わらず Resume は試さず、必ず新しいセッションを開始する。
+        $self->_forget_session;
         return 'invalid_session';
     }
 

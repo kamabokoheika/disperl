@@ -2,6 +2,32 @@
 
 リリースごとの変更点です（追加 / 変更 / 修正 / 削除）。
 
+## 未リリース（feature/voice）
+
+### 追加
+
+- 音声接続（`Disperl::Voice`）: voice gateway v8 のハンドシェイク
+  （identify / ready / select protocol / session description / heartbeat / resume）・
+  RTP 音声送信（`aead_xchacha20_poly1305_rtpsize`）・再生制御（play / pause /
+  resume / stop_source）・Speaking・無音フレーム
+- 音声用の補助モジュール:
+  - `Disperl::Voice::Crypto` — 依存なしの XChaCha20-Poly1305（RFC 8439 /
+    draft-irtf-cfrg-xchacha のベクタで検証）
+  - `Disperl::Voice::Ogg` — ogg ページの demuxer（ページまたぎ対応）
+  - `Disperl::Voice::Player` — 音源。ogg/opus（48kHz・20ms）は
+    `passthrough` バックエンドで ffmpeg 不要のまま再生（OpusHead と
+    フレーム長を検査、音量変更不可）。その他のフォーマットは ffmpeg
+    （libopus）でリエンコード（音量可）。URL 解決は呼び出し側の責務
+- E2EE（DAVE、`Disperl::Voice::Dave`）:
+  - MLS 1.0（RFC 9420、ciphersuite 2）: KeyPackage / Proposal / Commit /
+    Welcome / GroupInfo / ratchet_tree 拡張。純 Perl で P-256 ECDH / ECDSA
+    （Montgomery CIOS）・HPKE（RFC 9180）・HKDF・AES-128-GCM を実装
+  - voice gateway の DAVE opcode（21-31）の送受信
+  - メディアフレームの暗号化 / 復号（AES-128-GCM・タグ 8 バイト・
+    ULEB128 の nonce・世代ラチェット）
+- テスト: `t/50_ogg`, `t/51_crypto`, `t/52_dave_crypto`, `t/53_dave_session`, `t/54_voice`, `t/55_player`（ネットワーク不要、147 件）
+- ドキュメント: `docs/voice.md`
+
 ## 0.1.0 - 2026-11-22
 
 最初のバージョンです。Bot 向けの REST / Gateway / インタラクション機能一式

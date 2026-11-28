@@ -169,6 +169,8 @@ if ($message) {
 |---|---|
 | `Disperl::Client` | REST API。送信・取得・スレッド・チャンネル・ロール・メンバー・イベント・添付・インタラクション応答・コマンド登録 |
 | `Disperl::Gateway` | Gateway（WebSocket）。イベント受信・プレゼンス・インタラクション配送 |
+| `Disperl::Voice` | 音声接続（voice gateway v8）。RTP 送信・E2EE（DAVE）対応 |
+| `Disperl::Voice::Dave` | Discord の E2EE（DAVE）。MLS（RFC 9420）+ AES-128-GCM（純 Perl） |
 | `Disperl::Components` | ボタン／セレクト／Components V2／モーダルのビルダー |
 | `Disperl::Permissions` | 権限名とビットマスクの相互変換・実効権限の計算 |
 | `Disperl::AuditLog` | 監査ログのイベント種別（名前と数値の変換） |

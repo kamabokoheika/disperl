@@ -218,8 +218,8 @@ subtest 'ハンドシェイクのエラー' => sub {
     );
     $ok = eval { $closed->_run_once; 1 };
     ok !$ok, 'dies on close';
-    like $@, qr/Gateway closed during handshake \(code 4004 Authentication failed\)/,
-        'close message includes code and reason';
+    like $@, qr/Fatal gateway close code 4004/,
+        'close message includes fatal close code';
 };
 
 done_testing;

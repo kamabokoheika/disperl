@@ -366,9 +366,17 @@ subtest 'invalid session payload controls resume' => sub {
     $gw->{resume_url}  = 'wss://resume.example';
     $gw->{resume_next} = 1;
 
-    is $gw->_handle({ op => 9, d => JSON::PP::true }), 'invalid_session', 'op 9';
-    is $gw->{session_id}, 'sess-1', 'resumable session is kept';
-    is $gw->{resume_next}, 1, 'still resumes';
+    # d が true でも false でも、セッションは破棄して Identify からやり直す
+    is $gw->_handle({ op => 9, d => JSON::PP::true }), 'invalid_session', 'op 9 d=true';
+    ok !defined $gw->{session_id}, 'session discarded even when d is true';
+    ok !defined $gw->{seq}, 'sequence discarded';
+    ok !defined $gw->{resume_url}, 'resume url discarded';
+    is $gw->{resume_next}, 0, 'identify next time';
+
+    $gw->{session_id} = 'sess-2';
+    $gw->{seq}        = 8;
+    $gw->{resume_url} = 'wss://resume.example';
+    $gw->{resume_next} = 1;
 
     $gw->_handle({ op => 9, d => JSON::PP::false });
     ok !defined $gw->{session_id}, 'session discarded when d is false';

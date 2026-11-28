@@ -46,6 +46,7 @@ REST API（`Disperl::Client`）と Gateway / WebSocket（`Disperl::Gateway`）�
 | [チャンネル管理](channels.md) | 作成・編集・並び替え・権限上書き・削除 |
 | [絵文字 / ステッカー / サウンドボード](emojis-stickers.md) | ギルドの絵文字・ステッカー・サウンドの管理 |
 | [ステージインスタンス](stage.md) | ステージの開始・取得・変更・終了 |
+| [音声（Voice）](voice.md) | 音声接続・RTP 送信・E2EE（DAVE）・Ogg / Player 音源 |
 | [アプリ情報 / コマンド権限 / widget](applications.md) | アプリ情報・権限上書き・widget・プレビュー・バニティ |
 | [ギルド設定](guild-settings.md) | ギルド設定・ウェルカム画面・オンボーディング |
 | [ギルド管理（審査・連携・所属）](guild-admin.md) | メンバー審査・連携・ボイスリージョン・一括 BAN・所属ギルド |
@@ -153,7 +154,6 @@ if ($message) {
 
 ### 未対応
 
-- 音声（Voice）接続
 - ギルドの作成 / 削除（ユーザーアカウントの操作）
 - ユーザーアプリ / 埋め込みアプリ
 
